@@ -3,11 +3,17 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-INCLUDEPATH += ./include
-LIBS += -lasound
+INCLUDEPATH += ./include ./webrtc
+LIBS += -lasound -lspeex -lspeexdsp -lPocoFoundation -lpthread
 
 SOURCES += main.cpp \
-    audio/alsahandle.cpp
+    audio/alsahandle.cpp \
+    speex/speexhandler.cpp \
+    linklist.cpp
 
 HEADERS += \
-    audio/alsahandle.h
+    audio/alsahandle.h \
+    speex/speexhandler.h \
+    linklist.h \
+    include/common.h
+
