@@ -7,5 +7,5 @@ Linklist::Linklist(int blocksize,int maxlenght)
     list=new MemoryPool(8,maxlenght/3,maxlenght);
     head=nullptr;
     real=nullptr;
-
+    flag = 0;
 }
