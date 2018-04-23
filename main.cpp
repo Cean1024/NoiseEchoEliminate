@@ -1,26 +1,22 @@
 #include <iostream>
 #include "audio/alsahandle.h"
-//#include <speex/speex_echo.h>
+#include "speexhandle/speexhandler.h"
 #include <speex/speex_preprocess.h>
 #include <Poco/Thread.h>
 #include <Poco/Runnable.h>
 #include "linklist.h"
+#include "opus/opus.h"
+#include "common.h"
+#include "gpiocontrol.h"
 
 using namespace std;
 using namespace Poco;
 
-#define CHANNLE 2
-#define BITS 16
-#define SAMPLERATE 32000
 
-#define FRAMESIZE (SAMPLERATE/50)
-#define AFRAMEBUFSIZE (FRAMESIZE * CHANNLE *BITS /8)
-#define DENOISE_DB (20)
 
 struct threaddata {
-    AlsaHandle *read;
-    AlsaHandle *write;
-    SpeexPreprocessState *preprocess_state;
+    void *data1;
+    void *data2;
     Linklist *list;
 };
 
@@ -37,6 +33,8 @@ public:
     virtual void run()
     {
         cout <<"thread start\n";
+        AlsaHandle *reader=(AlsaHandle *)data->data1;
+
         //spx_int16_t  buf[FRAMESIZE * CHANNLE];
         if(data == nullptr ) {
             cout <<"empty pointer!!!\n";
@@ -45,12 +43,8 @@ public:
         listnode *node;
         while(1) {
             while( (node=data->list->CreateNode()) == nullptr ) usleep(10000);
-            data->read->readi(node->data,FRAMESIZE);
-            //speex_echo_cancellation(echo_state,buf,buf,buf2);
-            //peex_preprocess_run(data->preprocess_state ,(spx_int16_t *)node->data);
-            //data.write->writei((char *)buf,FRAMESIZE);
+            reader->readi(node->data,FRAMESIZE);
             data->list->InsertNode(node);
-
         }
 
     }
@@ -59,11 +53,44 @@ private:
 
 };
 
+void thread2_body(void *data)
+{
+    threaddata *body =(threaddata *)data;
+    listnode *node;
+    AlsaHandle *writer=(AlsaHandle *)body->data1;
+    char buf[AFRAMEBUFSIZE]={'0'};
+    char buf2[AFRAMEBUFSIZE];
+    int err;
+    OpusDecoder *  dec = opus_decoder_create(SAMPLERATE,CHANNLE,&err);
+    while(1){
+        while( (node=body->list->GetNode()) == nullptr )
+            writer->writei(buf,FRAMESIZE);
+
+        err = opus_decode(dec,(unsigned char*)node->data,\
+                          node->realsize,(opus_int16 *)buf2,FRAMESIZE,0);
+        writer->writei(buf2,FRAMESIZE);
+        body->list->DestroyNode(node);
+    }
+    opus_decoder_destroy(dec);
+}
+void button_check(void *data)
+{
+    GpioControl gc(0,INPUT);
+    while(1){
+
+        if(gc.getvalue(0)) cout << "button stat:-------\r"<<flush;
+        else cout << "button stat:pressed\r"<<flush;
+
+        usleep(200000);
+    }
+
+}
 
 int main(int argc, char *argv[])
 {
     AlsaHandle audioread,audiowrite;
-    threaddata data;
+    SpeexHandler speexobj(FRAMESIZE,SAMPLERATE);
+    threaddata data,data2;
     string hw;
 
     hw="hw:1";
@@ -73,75 +100,60 @@ int main(int argc, char *argv[])
     audiowrite.setHW(hw);
     audiowrite.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
     printf("audio init finish\n");
-    //spx_int16_t  buf2[FRAMESIZE * 2];
 
-    SpeexPreprocessState *preprocess_state = \
-            speex_preprocess_state_init(FRAMESIZE*2,SAMPLERATE);
-
-    data.preprocess_state = preprocess_state;
-    data.read = &audioread;
-    data.write = &audiowrite;
-    Linklist list( AFRAMEBUFSIZE , 60 );
+    Linklist list( AFRAMEBUFSIZE , 30 );
     data.list = &list;
+    data.data1 = (void *)&audioread;
 
     AudioHandle audiohandle;
     audiohandle.setthreaddata(&data);
-    Poco::Thread thread;
+    Poco::Thread thread,thread2,thread3;
 
-
-
-    //SpeexEchoState *echo_state = speex_echo_state_init(defaultframe,defaultframe);
-    //char resoult[FRAMESIZE];
-    int ret,value;
-
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_VAD,(void *)&value);
-
-    value =95;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_START,(void *)&value);
-    value =80;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_CONTINUE,(void *)&value);
-
-    //open voice limit
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_DENOISE,(void *)&value);
-    value=DENOISE_DB;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_NOISE_SUPPRESS,(void *)&value);
-
-    //open AGC
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_AGC,(void *)&value);
-    value=SAMPLERATE;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_AGC_LEVEL,(void *)&value);
+    Linklist list2( AFRAMEBUFSIZE , 30 );
+    data2.list=&list2;
+    data2.data1 = &audiowrite;
 
 
     printf("launch thread\n");
     thread.start(audiohandle);
+    thread2.start(thread2_body,(void *)&data2);
 
+    listnode *node,*node2;
 
-    listnode *node;
-    char buf[AFRAMEBUFSIZE];
-    char buf2[AFRAMEBUFSIZE]={'0'};
+    thread3.start(button_check,NULL);
 
-
+    int err;
+    OpusEncoder *enc = opus_encoder_create(SAMPLERATE,CHANNLE,OPUS_APPLICATION_AUDIO,&err);
+    //GpioControl GC;
+    int ledflag=0;
     while(1) {
 
         while( (node=list.GetNode()) == nullptr ) usleep(10000);
 
-        memcpy(buf,node->data,AFRAMEBUFSIZE);
-        ret = speex_preprocess_run(data.preprocess_state ,(spx_int16_t *)buf);
+        //memcpy(buf,node->data,AFRAMEBUFSIZE);
 
-        if(ret) {
-            audiowrite.writei(buf,FRAMESIZE);
-        }
-        else
-            audiowrite.writei(buf2,FRAMESIZE);
+        //判断是否有语音数据
+        if( speexobj.audioprocess(node->data) ) {
+
+            //有则将有语音数据的buf 保存到另外一个list中
+            if( (node2=data2.list->CreateNode()) != nullptr ) {
+                err = opus_encode(enc,(opus_int16 *)node->data,\
+                                  FRAMESIZE,(unsigned char *)node2->data,AFRAMEBUFSIZE);
+                //cout << "befor:"<<AFRAMEBUFSIZE<<" after:"<<err<<endl;
+                node2->realsize =err;
+                //memcpy(node2->data,node->data,AFRAMEBUFSIZE);
+
+                data2.list->InsertNode(node2);
+               // if(ledflag==1){GC.setallhigh();ledflag=0;}
+            }
+
+        } //else if( ledflag ==0 ) {GC.setalllow();ledflag=1;}
+
         list.DestroyNode(node);
+
     }
 
-
-    speex_preprocess_state_destroy(preprocess_state);
-    //speex_echo_state_destroy（echo_state）;
+    opus_encoder_destroy(enc);
     thread.join();
     return 0;
 }

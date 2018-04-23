@@ -1,35 +1,11 @@
-#ifndef BLACK_SIREN_COMMON_H
-#define BLACK_SIREN_COMMON_H
+#ifndef __COMMON_H
+#define __COMMON_H
 
-#ifdef __cplusplus
-#define __BEGIN_DECLS extern "C" {
-#define __END_DECLS  }
-#else
-#define __BEGIN_DECLS
-#define __END_DECLS
-#endif
-
-#define SIREN_UNUSED(x) (void)(x)
-
-__BEGIN_DECLS
-
-#ifdef __GNUC__
-#define PRINTF_FORMAT(a,b) __attribute__ ((format (printf, (a), (b))))
-#define STRUCT_PACKED __attribute__ ((packed))
-#else
-#define PRINTF_FORMAT(a,b)
-#define STRUCT_PACKED
-#endif
-
-
-#ifdef CONFIG_RECORDING_PATH
-#define CONFIG_STORE_PATH CONFIG_RECORDING_PATH 
-#else
-#define CONFIG_STORE_PATH ""
-#endif
-
-__END_DECLS
-
-
+/*audio configration*/
+#define CHANNLE 2
+#define BITS 16
+#define SAMPLERATE 48000
+#define FRAMESIZE (SAMPLERATE/50)
+#define AFRAMEBUFSIZE (FRAMESIZE * CHANNLE *BITS /8)
 
 #endif

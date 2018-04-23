@@ -36,7 +36,7 @@ DISTNAME      = NoiseEchoEliminate1.0.0
 DISTDIR = /home/pi/speech/kean/NoiseEchoEliminate/.tmp/NoiseEchoEliminate1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -lasound -lspeex -lspeexdsp -lPocoFoundation -lpthread 
+LIBS          = $(SUBLIBS) -lasound -lspeexdsp -lPocoFoundation -lpthread -lopus -L/home/pi/speech/kean/NoiseEchoEliminate/libs -lwiringPi 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -50,12 +50,20 @@ OBJECTS_DIR   = ./
 
 SOURCES       = main.cpp \
 		audio/alsahandle.cpp \
-		speex/speexhandler.cpp \
-		linklist.cpp 
+		speexhandle/speexhandler.cpp \
+		linklist.cpp \
+		opushandle.cpp \
+		mfcc/mfcc.cpp \
+		mfcc/mfcchandle.cpp \
+		gpiocontrol.cpp 
 OBJECTS       = main.o \
 		alsahandle.o \
 		speexhandler.o \
-		linklist.o
+		linklist.o \
+		opushandle.o \
+		mfcc.o \
+		mfcchandle.o \
+		gpiocontrol.o
 DIST          = /usr/lib/arm-linux-gnueabihf/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/arm-linux-gnueabihf/qt5/mkspecs/common/unix.conf \
 		/usr/lib/arm-linux-gnueabihf/qt5/mkspecs/common/linux.conf \
@@ -111,12 +119,19 @@ DIST          = /usr/lib/arm-linux-gnueabihf/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/arm-linux-gnueabihf/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/arm-linux-gnueabihf/qt5/mkspecs/features/lex.prf \
 		NoiseEchoEliminate.pro audio/alsahandle.h \
-		speex/speexhandler.h \
+		speexhandle/speexhandler.h \
 		linklist.h \
-		include/common.h main.cpp \
+		include/common.h \
+		opushandle.h \
+		mfcc/mfcchandle.h \
+		gpiocontrol.h main.cpp \
 		audio/alsahandle.cpp \
-		speex/speexhandler.cpp \
-		linklist.cpp
+		speexhandle/speexhandler.cpp \
+		linklist.cpp \
+		opushandle.cpp \
+		mfcc/mfcc.cpp \
+		mfcc/mfcchandle.cpp \
+		gpiocontrol.cpp
 QMAKE_TARGET  = NoiseEchoEliminate
 DESTDIR       = 
 TARGET        = NoiseEchoEliminate
@@ -283,17 +298,40 @@ compiler_clean:
 ####### Compile
 
 main.o: main.cpp audio/alsahandle.h \
-		linklist.h
+		speexhandle/speexhandler.h \
+		include/common.h \
+		linklist.h \
+		include/opus/opus.h \
+		include/opus/opus_types.h \
+		include/opus/opus_defines.h \
+		gpiocontrol.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 alsahandle.o: audio/alsahandle.cpp audio/alsahandle.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o alsahandle.o audio/alsahandle.cpp
 
-speexhandler.o: speex/speexhandler.cpp speex/speexhandler.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o speexhandler.o speex/speexhandler.cpp
+speexhandler.o: speexhandle/speexhandler.cpp speexhandle/speexhandler.h \
+		include/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o speexhandler.o speexhandle/speexhandler.cpp
 
 linklist.o: linklist.cpp linklist.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o linklist.o linklist.cpp
+
+opushandle.o: opushandle.cpp opushandle.h \
+		include/opus/opus.h \
+		include/opus/opus_types.h \
+		include/opus/opus_defines.h \
+		include/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o opushandle.o opushandle.cpp
+
+mfcc.o: mfcc/mfcc.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mfcc.o mfcc/mfcc.cpp
+
+mfcchandle.o: mfcc/mfcchandle.cpp mfcc/mfcchandle.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mfcchandle.o mfcc/mfcchandle.cpp
+
+gpiocontrol.o: gpiocontrol.cpp gpiocontrol.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gpiocontrol.o gpiocontrol.cpp
 
 ####### Install
 

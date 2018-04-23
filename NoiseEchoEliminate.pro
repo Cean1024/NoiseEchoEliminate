@@ -4,16 +4,23 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += ./include ./webrtc
-LIBS += -lasound -lspeex -lspeexdsp -lPocoFoundation -lpthread
+LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus -L$$PWD/libs -lwiringPi
 
 SOURCES += main.cpp \
     audio/alsahandle.cpp \
-    speex/speexhandler.cpp \
-    linklist.cpp
+    speexhandle/speexhandler.cpp \
+    linklist.cpp \
+    opushandle.cpp \
+    mfcc/mfcc.cpp \
+    mfcc/mfcchandle.cpp \
+    gpiocontrol.cpp
 
 HEADERS += \
     audio/alsahandle.h \
-    speex/speexhandler.h \
+    speexhandle/speexhandler.h \
     linklist.h \
-    include/common.h
+    include/common.h \
+    opushandle.h \
+    mfcc/mfcchandle.h \
+    gpiocontrol.h
 
