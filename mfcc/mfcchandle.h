@@ -6,6 +6,12 @@ class MfccHandle
 {
 public:
     MfccHandle();
+
+    virtual ~MfccHandle()
+    {
+
+    }
+
 };
 
 #endif // MFCCHANDLE_H

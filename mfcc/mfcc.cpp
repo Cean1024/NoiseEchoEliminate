@@ -292,23 +292,3 @@ void MFCC(double *sample, int len)
 
     writeToFile(frameNum, frameSize, hopStep, c, sample, Sample, frameSample, FFTSample, mel);
 }
-
-int main()
-{
-    ifstream filedata("C:\\Users\\john\\Desktop\\txt\\Data.txt");
-    int len = 0;
-    //读取wav文件的数值
-    double *sample = new double[160000];
-    while(!filedata.eof())
-    {
-        filedata >> sample[len];
-        sample[len] = sample[len] * 1000;
-        len++;
-    }
-    cout << len << endl;
-    MFCC(sample, len);
-    delete [] sample;
-
-    return 0;
-}
-
