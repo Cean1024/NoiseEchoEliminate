@@ -11,9 +11,9 @@ SOURCES += main.cpp \
     speexhandle/speexhandler.cpp \
     linklist.cpp \
     opushandle.cpp \
-    mfcc/mfcc.cpp \
     mfcc/mfcchandle.cpp \
-    gpiocontrol.cpp
+    gpiocontrol.cpp \
+    keyword/keyworddetect.cpp
 
 HEADERS += \
     audio/alsahandle.h \
@@ -22,5 +22,6 @@ HEADERS += \
     include/common.h \
     opushandle.h \
     mfcc/mfcchandle.h \
-    gpiocontrol.h
+    gpiocontrol.h \
+    keyword/keyworddetect.h
 
