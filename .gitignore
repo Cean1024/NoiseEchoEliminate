@@ -1,3 +1,4 @@
 NoiseEchoEliminate
 NoiseEchoEliminate.pro.user
 *.o
+Makefile
