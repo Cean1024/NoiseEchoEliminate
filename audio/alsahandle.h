@@ -1,42 +1,18 @@
 #ifndef ALSAHANDLE_H
 #define ALSAHANDLE_H
 
-//#include "common.h"
+#include "common.h"
 #include <alsa/asoundlib.h>
 #include <iostream>
 #define defaultframe 1024
 #define n_buf 10
-#define r_status int
+
 #define DEBUG(format,args...) printf(format,##args)
 
 //#define ALSAPCM "/dev/pcmC0D0p"
 
 //#define AUTOSETFRAME
 
-enum returnstatus {
-
-    ERROR = -2,
-    FAILED = -1,
-    SUCCESS=0,
-    PSUCCESS,
-    PFAILED,
-    FSUCCES,
-    FFAILD,
-    ISUCCESS,
-    IFAILED,
-    IGENOR,
-    NEEDUPDATA,
-    NOTNEEDUPDATA,
-    EXIST,
-    NOTEXIST,
-    WAITING,
-    YES,
-    NO,
-    PLAYSTART,
-    PLAYSTOP,
-    PLAYRUNING,
-    PLAYWAITING
-};
 
 struct snd_pcm_params {
     snd_pcm_t *playback_handle; //PCM 设备句柄
@@ -52,7 +28,7 @@ struct snd_pcm_params {
 struct audioparam
 {
     int RATE;       //采样频率
-    int BITS;       //量化位数
+    int BIT;       //量化位数
     int CHANNELS;   //声道数目
     int DIR;
     int bytesperframe; //bytes per frame;

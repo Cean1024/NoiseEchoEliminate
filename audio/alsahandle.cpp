@@ -11,7 +11,7 @@ AlsaHandle::AlsaHandle()
 
     params.RATE = 44100;
     params.CHANNELS = 2;
-    params.BITS = 16;
+    params.BIT = 16;
     params.DIR = 0;
     params.bytesperframe = 4;
 }
@@ -42,10 +42,10 @@ r_status AlsaHandle::setHW(std::string &hw)
 r_status AlsaHandle::init (int sample_rate,int channels , int sample_bit, snd_pcm_stream_t streamRDWR)
 {
     pcm_param.streamRDWR = streamRDWR ;
-    if(sample_bit != params.BITS)
+    if(sample_bit != params.BIT)
     {
-        params.BITS = sample_bit;
-        switch(params.BITS) {
+        params.BIT = sample_bit;
+        switch(params.BIT) {
         case 8:pcm_param.pcm_format = SND_PCM_FORMAT_S8;break;
         case 16:pcm_param.pcm_format = SND_PCM_FORMAT_S16_LE;break;
         case 24:pcm_param.pcm_format = SND_PCM_FORMAT_S24_LE;break;
@@ -61,10 +61,10 @@ r_status AlsaHandle::init (int sample_rate,int channels , int sample_bit, snd_pc
 
 r_status AlsaHandle::init (int sample_rate,int channels , int sample_bit)
 {
-    if(sample_bit != params.BITS)
+    if(sample_bit != params.BIT)
     {
-        params.BITS = sample_bit;
-        switch(params.BITS) {
+        params.BIT = sample_bit;
+        switch(params.BIT) {
         case 8:pcm_param.pcm_format = SND_PCM_FORMAT_S8;break;
         case 16:pcm_param.pcm_format = SND_PCM_FORMAT_S16_LE;break;
         case 24:pcm_param.pcm_format = SND_PCM_FORMAT_S24_LE;break;
@@ -79,19 +79,19 @@ r_status AlsaHandle::init (int sample_rate,int channels , int sample_bit)
 }
 r_status  AlsaHandle::init (struct audioparam &params)
 {
-    if(params.BITS != this->params.BITS)
+    if(params.BIT != this->params.BIT)
     {
-        this->params.BITS = params.BITS;
-        switch(this->params.BITS) {
+        this->params.BIT = params.BIT;
+        switch(this->params.BIT) {
         case 8:pcm_param.pcm_format = SND_PCM_FORMAT_S8;break;
         case 16:pcm_param.pcm_format = SND_PCM_FORMAT_S16_LE;break;
         case 24:pcm_param.pcm_format = SND_PCM_FORMAT_S24_LE;break;
         default:pcm_param.pcm_format = SND_PCM_FORMAT_S16_LE;break;
         }
     }
-    if ( this->params.BITS != params.RATE ) this->params.RATE = params.RATE;
+    if ( this->params.BIT != params.RATE ) this->params.RATE = params.RATE;
     if ( this->params.CHANNELS != params.CHANNELS ) this->params.CHANNELS = params.CHANNELS ;
-    int bytesperfame = params.CHANNELS * params.BITS / 8;
+    int bytesperfame = params.CHANNELS * params.BIT / 8;
     if( this->params.bytesperframe != bytesperfame ) this->params.bytesperframe = bytesperfame;
     return audioinit();
 
