@@ -8,7 +8,8 @@
 #include "opus/opus.h"
 #include "common.h"
 #include "gpiocontrol.h"
-
+#include "mfcc/mfcchandle.h"
+#include "keyword/keyworddetect.h"
 using namespace std;
 using namespace Poco;
 
@@ -86,6 +87,27 @@ void button_check(void *data)
 
 }
 
+void melnumdisplay(void *data)
+{
+    Linklist *mellist = (Linklist *)data;
+    listnode *node;
+    float *dctmel;
+    unsigned  int count=1;
+    while(1) {
+        while( (node=mellist->GetNode()) == nullptr )usleep(10000);
+
+        dctmel=(float *)node->data;
+        printf("id:%u dct mel:",count++);
+
+        for( int i=0;i<DTCNUM; i++)
+            printf(" %f",dctmel[i]);
+
+        cout<<endl;
+
+        mellist->DestroyNode(node);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     AlsaHandle audioread,audiowrite;
@@ -120,12 +142,22 @@ int main(int argc, char *argv[])
 
     listnode *node,*node2;
 
-    thread3.start(button_check,NULL);
+    //thread3.start(button_check,NULL);
 
     int err;
-    OpusEncoder *enc = opus_encoder_create(SAMPLERATE,CHANNLE,OPUS_APPLICATION_AUDIO,&err);
+    OpusEncoder *enc = opus_encoder_create(SAMPLERATE,CHANNLE,\
+                                           OPUS_APPLICATION_AUDIO,&err);
     //GpioControl GC;
-    int ledflag=0;
+    //int ledflag=0;
+
+
+    Linklist mellist( DTCNUM * sizeof(float) , 30 );
+    MfccHandle  MfccCalc;
+    listnode *melnode;
+    thread3.start(melnumdisplay,(void *)&mellist);
+
+    KeyWordDetect kwd("/home/pi/speech/kean/NoiseEchoEliminate/keyword/MEL_COE");
+
     while(1) {
 
         while( (node=list.GetNode()) == nullptr ) usleep(10000);
@@ -135,19 +167,25 @@ int main(int argc, char *argv[])
         //判断是否有语音数据
         if( speexobj.audioprocess(node->data) ) {
 
-            //有则将有语音数据的buf 保存到另外一个list中
+            //有则将有语音数据的buf 通过opus 编码后 保存到另外一个list中
             if( (node2=data2.list->CreateNode()) != nullptr ) {
                 err = opus_encode(enc,(opus_int16 *)node->data,\
-                                  FRAMESIZE,(unsigned char *)node2->data,AFRAMEBUFSIZE);
-                //cout << "befor:"<<AFRAMEBUFSIZE<<" after:"<<err<<endl;
-                node2->realsize =err;
-                //memcpy(node2->data,node->data,AFRAMEBUFSIZE);
+                                  FRAMESIZE,(unsigned char *)node2->data,\
+                                  AFRAMEBUFSIZE);
 
+                node2->realsize =err;
                 data2.list->InsertNode(node2);
-               // if(ledflag==1){GC.setallhigh();ledflag=0;}
+/*
+               if( (melnode=mellist.CreateNode()) != nullptr ) {
+                   MfccCalc.mfcc_calc((opus_int16 *)node->data,\
+                                      FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
+                   mellist.InsertNode(melnode);
+
+               }*/
+
             }
 
-        } //else if( ledflag ==0 ) {GC.setalllow();ledflag=1;}
+        }
 
         list.DestroyNode(node);
 
