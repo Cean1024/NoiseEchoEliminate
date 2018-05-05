@@ -7,12 +7,7 @@
 
 using namespace std;
 
-#define FILTERNUM 40
-#define DTCNUM 13
-#define Win_Time 0.025//把25ms里的所有点作为一个点分析
-#define Hop_Time 0.01//每隔10ms分一次帧
-#define Pi 3.1415927
-#define STEP_TIME 0.005 //
+
 
 class RangBuffer {
 public:

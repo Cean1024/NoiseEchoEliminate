@@ -87,25 +87,41 @@ void button_check(void *data)
 
 }
 
-void melnumdisplay(void *data)
+
+r_status inputCB(float *reil_meil,void *data,int size)
 {
     Linklist *mellist = (Linklist *)data;
     listnode *node;
     float *dctmel;
+    while( (node=mellist->GetNode()) == nullptr ) usleep(10000);
+
+    dctmel = (float *)node->data;
+    if( size > DTCNUM ) return FAILED;
+    memcpy(reil_meil,dctmel + DTCNUM -size, size );
+
+
+/*
+    for( int i=0;i<DTCNUM; i++)
+        printf(" %f",dctmel[i]);
+
+    cout<<endl;
+*/
+    mellist->DestroyNode(node);
+    return SUCCESS;
+}
+ r_status outputCB (KeyWordOutData event,void *data)
+ {
+
+
+ }
+void melnumdisplay(void *data)
+{
+
+
     unsigned  int count=1;
-    while(1) {
-        while( (node=mellist->GetNode()) == nullptr )usleep(10000);
-
-        dctmel=(float *)node->data;
-        printf("id:%u dct mel:",count++);
-
-        for( int i=0;i<DTCNUM; i++)
-            printf(" %f",dctmel[i]);
-
-        cout<<endl;
-
-        mellist->DestroyNode(node);
-    }
+    KeyWordDetect kwd(PATH_KEYWORD_COE);
+    kwd.CallbackReg(inputCB,outputCB,data,nullptr);
+    kwd.DetectKeyword();
 }
 
 int main(int argc, char *argv[])
@@ -156,7 +172,7 @@ int main(int argc, char *argv[])
     listnode *melnode;
     thread3.start(melnumdisplay,(void *)&mellist);
 
-    KeyWordDetect kwd("/home/pi/speech/kean/NoiseEchoEliminate/keyword/MEL_COE");
+
 
     while(1) {
 
@@ -175,13 +191,13 @@ int main(int argc, char *argv[])
 
                 node2->realsize =err;
                 data2.list->InsertNode(node2);
-/*
+
                if( (melnode=mellist.CreateNode()) != nullptr ) {
                    MfccCalc.mfcc_calc((opus_int16 *)node->data,\
                                       FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
                    mellist.InsertNode(melnode);
 
-               }*/
+               }
 
             }
 
