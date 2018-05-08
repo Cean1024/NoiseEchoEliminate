@@ -34,9 +34,11 @@ typedef r_status (*KeywordOutCb) (KeyWordOutData event,void *data);
 using namespace std;
 
 
-struct x_y{
+struct x_y {
   int x;
   int y;
+  char keyword[10];
+  int acount;
 };
 
 class keyword

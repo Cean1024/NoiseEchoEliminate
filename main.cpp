@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 
         //判断是否有语音数据
         if( speexobj.audioprocess(node->data) ) {
-
+/*
             //有则将有语音数据的buf 通过opus 编码后 保存到另外一个list中
             if( (node2=data2.list->CreateNode()) != nullptr ) {
                 err = opus_encode(enc,(opus_int16 *)node->data,\
@@ -192,14 +192,15 @@ int main(int argc, char *argv[])
                 node2->realsize =err;
                 data2.list->InsertNode(node2);
 
-               if( (melnode=mellist.CreateNode()) != nullptr ) {
-                   MfccCalc.mfcc_calc((opus_int16 *)node->data,\
-                                      FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
-                   mellist.InsertNode(melnode);
-
-               }
+            }
+*/
+            if( (melnode=mellist.CreateNode()) != nullptr ) {
+                MfccCalc.mfcc_calc((opus_int16 *)node->data,\
+                                   FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
+                mellist.InsertNode(melnode);
 
             }
+
 
         }
 

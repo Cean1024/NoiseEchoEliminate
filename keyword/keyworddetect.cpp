@@ -14,9 +14,10 @@ r_status keyword::readmel_coe(string filepath)
             fp.getline(buf,READLEN);
             tmp=buf;
         }
-        while (tmp.find("#",0)==string::npos);
-
-        LogOut("keyword name:%s\n",buf);
+        while ( tmp.find("#",0) == string::npos );
+        tmp = tmp.substr(tmp.find(".",0)-3,3);
+        memcpy(xy[num].keyword,tmp.c_str(),3);
+        LogOut("keyword name:%s\n",tmp.c_str());
         memset(buf,0,READLEN);
         fp.getline(buf,READLEN);
         LogOut("xy:%s\n",buf);
@@ -152,15 +153,38 @@ r_status KeyWordDetect::Process(int num)
 {
     updateMatrix(num);
     float similarity=0;
-    float sum=0;
-    int average;
+    float prob_f=0;
+    int average,prob_i;
+    int count=0;
     for(int i =0;i<xy[num].x;i++) {
         CSM(realMeil[num][i],dct_meil[num][i],similarity);
-        sum += similarity*100;
+        //sum += similarity*10;
+
+    //sum = sum/xy[num].x;
+    average = similarity*100;
+    //if(average > 70)
+/*
+    if (average < -8 || average >8) {
+    string baoluo="|          |          |";
+    if(average<0){
+        average=0-average;
+        for(int i=10;11-i<average;i--) baoluo[i]='=';
+    } else
+    for(int i=12;i-11<average;i++) baoluo[i]='=';
+
+    //LogOut("average %d \n",average);
+    LogOut("%s %d\n",baoluo.c_str(),count++);
     }
-    sum = sum/xy[num].x;
-    average = (int )(sum);
-    if(average > 70)
-    LogOut("average %d \n",average);
+*/
+
+    //if (average < -8 || average >8) count++;
+    if ( average < -60 || average > 60 ) count++;
+    }
+    if (count >28) {
+    prob_f=count *100.0 / xy[num].x;
+    prob_i = prob_f;
+    LogOut("关键字:%s 概率:%2d%% 匹配数:%2d 帧数:%d 匹配次数:%d\n",\
+           xy[num].keyword,prob_i,count,xy[num].x,++xy[num].acount);
+    }
     return SUCCESS;
 }
