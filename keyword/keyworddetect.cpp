@@ -113,6 +113,9 @@ r_status KeyWordDetect::DetectKeyword()
     while(true) {
 
         Process(0);
+        // Process(1);
+        // Process(2);
+        // Process(3);
 
     }
 }
@@ -121,15 +124,15 @@ r_status KeyWordDetect::updateMatrix(int num)
     if( num < 0 || num >=NUM_KEYWORD ) return ERROR;
     float *tmp;
     int size = xy[num].x -1;
-    tmp = realMeil[num][size];
+    tmp = realMeil[num][0];
 
-    for(int i=0;i < size -1 ;i++) {
+    for(int i=0;i < size  ;i++) {
 
-        realMeil[num][i+1] = realMeil[num][i];
+        realMeil[num][i] = realMeil[num][i+1];
 
     }
-    realMeil[num][0] = tmp;
-    r_status ret = InputFunc(realMeil[num][0],Indata,BUFFER_Y);
+    realMeil[num][size] = tmp;
+    r_status ret = InputFunc(tmp,Indata,BUFFER_Y);
 
     if ( ret != SUCCESS ) {
         LogOut("获取梅尔倒谱系数失败!\n");
@@ -151,40 +154,49 @@ int KeyWordDetect::CSM(float real_Meil[BUFFER_Y], \
 }
 r_status KeyWordDetect::Process(int num)
 {
-    updateMatrix(num);
+
     float similarity=0;
     float prob_f=0;
     int average,prob_i;
     int count=0;
-    for(int i =0;i<xy[num].x;i++) {
-        CSM(realMeil[num][i],dct_meil[num][i],similarity);
-        //sum += similarity*10;
+    for(int time=0;time<xy[num].x;time++){
+        count=0;
+        similarity=0;
+        prob_f=0;
+        average=0;
+        updateMatrix(num);
+        for(int i =0;i<xy[num].x;i++) {
+            CSM(realMeil[num][i],dct_meil[num][i],similarity);
+            //sum += similarity*10;
 
-    //sum = sum/xy[num].x;
-    average = similarity*100;
-    //if(average > 70)
-/*
-    if (average < -8 || average >8) {
-    string baoluo="|          |          |";
-    if(average<0){
-        average=0-average;
-        for(int i=10;11-i<average;i--) baoluo[i]='=';
-    } else
-    for(int i=12;i-11<average;i++) baoluo[i]='=';
+            //sum = sum/xy[num].x;
+            average = similarity*100;
+            //if(average > 70)
+#if 0
+            if (average < -8 || average >8) {
+                string baoluo="|          |          |";
+                if(average<0){
+                    average=0-average;
+                    for(int i=10;11-i<average;i--) baoluo[i]='=';
+                } else
+                    for(int i=12;i-11<average;i++) baoluo[i]='=';
 
-    //LogOut("average %d \n",average);
-    LogOut("%s %d\n",baoluo.c_str(),count++);
-    }
-*/
+                //LogOut("average %d \n",average);
+                LogOut("%s %d\n",baoluo.c_str(),count++);
+            }
+#endif
 
-    //if (average < -8 || average >8) count++;
-    if ( average < -60 || average > 60 ) count++;
-    }
-    if (count >28) {
-    prob_f=count *100.0 / xy[num].x;
-    prob_i = prob_f;
-    LogOut("关键字:%s 概率:%2d%% 匹配数:%2d 帧数:%d 匹配次数:%d\n",\
-           xy[num].keyword,prob_i,count,xy[num].x,++xy[num].acount);
+            //if (average < -8 || average >8) count++;
+            //if ( average > 60 ) count++;
+            count += average;
+        }
+
+        prob_f=count  / xy[num].x;
+        prob_i = prob_f;
+        if (prob_i >60) {
+            LogOut("关键字:%s 概率:%2d%% 匹配数:%5d 帧数:%d 匹配次数:%d\n",\
+                   xy[num].keyword,prob_i,count,xy[num].x,++xy[num].acount);
+        }
     }
     return SUCCESS;
 }
