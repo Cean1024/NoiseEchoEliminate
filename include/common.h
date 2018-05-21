@@ -1,5 +1,8 @@
 #ifndef __COMMON_H
 #define __COMMON_H
+#include <iostream>
+typedef int r_status;
+
 
 /*audio configration*/
 #define CHANNLE 2
@@ -21,9 +24,35 @@
 /*keyword config*/
 //#define PATH_KEYWORD_COE "/home/pi/speech/kean/NoiseEchoEliminate/keyword/MEL_COE"
 #define PATH_KEYWORD_COE "/home/pi/speech/kean/NoiseEchoEliminate/keyword/dct_meils"
+enum DetectEvent {
+    HaveKeyWord,
+    HaveError
+};
+
+struct KeyWordInData {
+    float data[DTCNUM];
+};
+
+struct KeyWordOutData {
+    DetectEvent event;
+    std::string key_word;
+};
+
+
+typedef r_status (*KeywordInCb) (float *reil_meil,void *data,int size);
+typedef r_status (*DataInputCb) (void *datain , short *dataout,int size);
+typedef r_status (*KeywordOutCb) (KeyWordOutData &event,void *data);
+
+
+#define MODULEDIR "/home/pi/speech/dicts/xiaosang/"
+#define HMM "hmm_module"
+#define DICT "xiaosang.dic"
+#define LM "xiaosang.lm"
+#define NUMKEIWORDS 4
+
 
 /*common config*/
-#define r_status int
+
 
 enum returnstatus {
 
@@ -44,12 +73,11 @@ enum returnstatus {
     WAITING,
     YES,
     NO,
-    PLAYSTART,
-    PLAYSTOP,
-    PLAYRUNING,
-    PLAYWAITING
+    FOUND,
+    NOTFOUND
+
 };
 
-#define LogOut(PRINTFORMET,args...) printf( "[%s] " PRINTFORMET,__func__,##args)
+#define LogOut(PRINTFORMET,args...) printf( "[%s] " PRINTFORMET "\n",__func__,##args)
 
 #endif
