@@ -14,22 +14,6 @@
 #define BUFFER_Y 12
 #define NUM_KEYWORD 4
 
-enum DetectEvent{
-    HaveKeyWord,
-    HaveError
-};
-
-struct KeyWordInData{
-    float data[DTCNUM];
-};
-
-struct KeyWordOutData{
-    DetectEvent event;
-};
-
-
-typedef r_status (*KeywordInCb) (float *reil_meil,void *data,int size);
-typedef r_status (*KeywordOutCb) (KeyWordOutData event,void *data);
 
 using namespace std;
 
