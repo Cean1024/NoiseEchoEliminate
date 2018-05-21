@@ -10,6 +10,7 @@
 #include "gpiocontrol.h"
 #include "mfcc/mfcchandle.h"
 #include "keyword/keyworddetect.h"
+#include "keyword/pocketsphinxkeyword.h"
 using namespace std;
 using namespace Poco;
 
@@ -109,22 +110,57 @@ r_status inputCB(float *reil_meil,void *data,int size)
     mellist->DestroyNode(node);
     return SUCCESS;
 }
- r_status outputCB (KeyWordOutData event,void *data)
+ r_status outputCB (KeyWordOutData &event,void *data)
  {
-
-
+    if(event.event == HaveKeyWord){
+        LogOut("keyword [%s] occoured!!",event.key_word.c_str());
+    }
  }
+
+r_status DataInput (void *datain ,short *out,int size)
+{
+    Linklist *mellist = (Linklist *)datain;
+    listnode *node;
+
+    while( (node=mellist->GetNode()) == nullptr ) usleep(10000);
+    memcpy(out,node->data,size*2);
+    mellist->DestroyNode(node);
+    return SUCCESS;
+
+}
 void melnumdisplay(void *data)
 {
-
-
     unsigned  int count=1;
+    PocketSphinxKeyword kwd(MODULEDIR HMM,MODULEDIR LM ,MODULEDIR DICT);
+    kwd.registeInOut(DataInput,data,outputCB,nullptr);
+    kwd.detectKeyword();
+
+    /*
     KeyWordDetect kwd(PATH_KEYWORD_COE);
     kwd.CallbackReg(inputCB,outputCB,data,nullptr);
     kwd.DetectKeyword();
+    */
+
 }
 
-int main(int argc, char *argv[])
+
+r_status readmic (void *datain ,short *out,int size)
+{
+    AlsaHandle *mic = (AlsaHandle *)datain;
+    char *buf= new char[AFRAMEBUFSIZE];
+    short *p1;
+    p1=(short *)buf;
+    memset(buf,0,FRAMESIZE);
+    mic->readi(buf,size);
+    for(int i=0;i<size;i++) {
+        *out++=*p1;
+        p1+=2;
+    }
+    delete[] buf;
+    return SUCCESS;
+
+}
+int main (int argc, char *argv[])
 {
     AlsaHandle audioread,audiowrite;
     SpeexHandler speexobj(FRAMESIZE,SAMPLERATE);
@@ -134,6 +170,15 @@ int main(int argc, char *argv[])
     hw="hw:1";
     audioread.setHW(hw);
     audioread.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_CAPTURE);
+
+
+#if 0
+    PocketSphinxKeyword kwd(MODULEDIR HMM,MODULEDIR LM ,MODULEDIR DICT);
+
+    kwd.registeInOut(readmic,(void *)&audioread,outputCB,nullptr);
+    kwd.detectKeyword();
+#endif
+#if 1
     hw="hw:0";
     audiowrite.setHW(hw);
     audiowrite.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
@@ -166,13 +211,14 @@ int main(int argc, char *argv[])
     //GpioControl GC;
     //int ledflag=0;
 
-
+/*
     Linklist mellist( DTCNUM * sizeof(float) , 30 );
     MfccHandle  MfccCalc;
     listnode *melnode;
-    thread3.start(melnumdisplay,(void *)&mellist);
-
-
+*/
+    Linklist list3( FRAMESIZE * 2 , 30 );
+    listnode *keynode;
+    thread3.start(melnumdisplay,(void *)&list3);
 
     while(1) {
 
@@ -182,7 +228,7 @@ int main(int argc, char *argv[])
 
         //判断是否有语音数据
         if( speexobj.audioprocess(node->data) ) {
-/*
+
             //有则将有语音数据的buf 通过opus 编码后 保存到另外一个list中
             if( (node2=data2.list->CreateNode()) != nullptr ) {
                 err = opus_encode(enc,(opus_int16 *)node->data,\
@@ -193,15 +239,28 @@ int main(int argc, char *argv[])
                 data2.list->InsertNode(node2);
 
             }
-*/
+/*
             if( (melnode=mellist.CreateNode()) != nullptr ) {
                 MfccCalc.mfcc_calc((opus_int16 *)node->data,\
                                    FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
                 mellist.InsertNode(melnode);
 
             }
+*/
 
 
+
+        }
+
+        if( (keynode=list3.CreateNode()) != nullptr ) {
+            short *p1,*p2;
+            p1=(short *)keynode->data;
+            p2=(short *)node->data;
+            for(int i=0;i<FRAMESIZE;i++) {
+                *p1++=*p2;
+                p2+=2;
+            }
+             list3.InsertNode(keynode);
         }
 
         list.DestroyNode(node);
@@ -210,5 +269,6 @@ int main(int argc, char *argv[])
 
     opus_encoder_destroy(enc);
     thread.join();
+#endif
     return 0;
 }
