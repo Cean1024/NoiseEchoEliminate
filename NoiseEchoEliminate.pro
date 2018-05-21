@@ -3,8 +3,9 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-INCLUDEPATH += ./include ./webrtc
-LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus -L$$PWD/libs -lwiringPi
+INCLUDEPATH += ./include ./webrtc /usr/local/include/sphinxbase /usr/local/include/pocketsphinx
+LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus -L$$PWD/libs -lwiringPi \
+        -lpocketsphinx -lsphinxbase -lsphinxad
 
 SOURCES += main.cpp \
     audio/alsahandle.cpp \
@@ -13,7 +14,8 @@ SOURCES += main.cpp \
     opushandle.cpp \
     mfcc/mfcchandle.cpp \
     gpiocontrol.cpp \
-    keyword/keyworddetect.cpp
+    keyword/keyworddetect.cpp \
+    keyword/pocketsphinxkeyword.cpp
 
 HEADERS += \
     audio/alsahandle.h \
@@ -23,5 +25,6 @@ HEADERS += \
     opushandle.h \
     mfcc/mfcchandle.h \
     gpiocontrol.h \
-    keyword/keyworddetect.h
+    keyword/keyworddetect.h \
+    keyword/pocketsphinxkeyword.h
 
