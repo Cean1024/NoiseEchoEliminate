@@ -1,12 +1,24 @@
 #include "pocketsphinxkeyword.h"
-
+#include <sstream>
 PocketSphinxKeyword::PocketSphinxKeyword(string hmm, string lm, string dict)
 {
     data = nullptr;
+    stringstream itos,iton;
+    string samprate;
+    string nfftn;
+
+    itos << SAMPLERATE;
+    itos >> samprate;
+
+    iton << 2048;
+    iton >> nfftn;
+    LogOut("samprate:%s  nfft: %s ",samprate.c_str(),nfftn.c_str());
     config = cmd_ln_init( NULL, ps_args(), TRUE,\
+                          "-nfft",nfftn.c_str(),\
                           "-hmm", hmm.c_str(),\
                           "-lm", lm.c_str(),\
                           "-dict", dict.c_str(),\
+                          "-samprate",samprate.c_str(),\
                           NULL);
     if(config== nullptr) {
         LogOut("cmd_ln_init failed");
@@ -55,7 +67,7 @@ r_status PocketSphinxKeyword::audio_process()
 
 
     int  rv ;
-
+    uint count=0;
     rv = ps_start_utt(ps);
     if(rv < 0) { LogOut("ps_start_utt error");}
     char * bestwords= "你好小桑";
@@ -69,8 +81,9 @@ r_status PocketSphinxKeyword::audio_process()
 
         rv = ps_get_in_speech(ps);
         if( rv == 1 ) {
-            words = ps_get_hyp( ps , nullptr );
 
+            words = ps_get_hyp( ps , nullptr );
+            //LogOut("somebody speaking %u",count++);
             if(words != nullptr   ) {
                 size = strlen(words);
                 //printf("keyword :%s size:%d rv:%d\n",words,size,rv);
@@ -91,11 +104,10 @@ r_status PocketSphinxKeyword::audio_process()
 }
 r_status PocketSphinxKeyword::detectKeyword()
 {
-
     int ret;
     KeyWordOutData status;
 
-    while(swith) {
+    while(true) {
         ret = audio_process( );
         if ( ret == FAILED ) break;
         else if (ret == FOUND ) {
