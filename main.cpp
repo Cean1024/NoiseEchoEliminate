@@ -11,6 +11,8 @@
 #include "mfcc/mfcchandle.h"
 #include "keyword/keyworddetect.h"
 #include "keyword/pocketsphinxkeyword.h"
+#include "network/netclient.h"
+
 using namespace std;
 using namespace Poco;
 
@@ -20,6 +22,10 @@ struct threaddata {
     void *data1;
     void *data2;
     Linklist *list;
+    bool needCap;
+    int is_speech;
+    int Captime;
+    time_t times;
 };
 
 class AudioHandle: public Poco::Runnable
@@ -63,17 +69,26 @@ void thread2_body(void *data)
     char buf[AFRAMEBUFSIZE]={'0'};
     char buf2[AFRAMEBUFSIZE];
     int err;
-    OpusDecoder *  dec = opus_decoder_create(SAMPLERATE,CHANNLE,&err);
-    while(1){
-        while( (node=body->list->GetNode()) == nullptr )
-            writer->writei(buf,FRAMESIZE);
+
+    netclient nclient;
+
+#if 1
+
+    OpusDecoder * dec = opus_decoder_create(SAMPLERATE,CHANNLE,&err);
+    while(1) {
+        while( (node=body->list->GetNode()) == nullptr ) usleep(100000);
+            //writer->writei(buf,FRAMESIZE);
 
         err = opus_decode(dec,(unsigned char*)node->data,\
                           node->realsize,(opus_int16 *)buf2,FRAMESIZE,0);
-        writer->writei(buf2,FRAMESIZE);
+        //writer->writei(buf2,FRAMESIZE);
+        nclient.senddata(buf2,AFRAMEBUFSIZE);
         body->list->DestroyNode(node);
     }
     opus_decoder_destroy(dec);
+
+#endif
+
 }
 void button_check(void *data)
 {
@@ -112,8 +127,72 @@ r_status inputCB(float *reil_meil,void *data,int size)
 }
  r_status outputCB (KeyWordOutData &event,void *data)
  {
-    if(event.event == HaveKeyWord){
+     threaddata *tmp=(threaddata *)data;
+     AlsaHandle *writer = (AlsaHandle *) tmp->data1;
+     threaddata *tmp2 = (threaddata *)tmp->data2;
+    listnode *node;
+
+    char buf[AFRAMEBUFSIZE];
+    int ret,err;
+    OpusDecoder * dec = opus_decoder_create(SAMPLERATE,CHANNLE,&err);
+
+
+    if(event.event == HaveKeyWord) {
+
         LogOut("keyword [%s] occoured!!",event.key_word.c_str());
+        writer->init (SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
+        int fd=open(ECHOOFKEY,O_RDONLY);
+
+        read(fd,buf,44);
+        while ((ret=read(fd,buf,AFRAMEBUFSIZE)) > 0) {
+            writer->writei(buf,FRAMESIZE);
+            memset(buf,0,AFRAMEBUFSIZE);
+        }
+        close(fd);
+        /*set cap wait time*/
+        tmp->Captime=CAPWAITTIME;
+        tmp->needCap=true;
+
+        netclient nclient;
+
+        while ( (tmp->needCap == true) ) {
+            if ((node = tmp2->list->GetNode()) != nullptr)  {
+
+            err = opus_decode(dec,(unsigned char*)node->data,\
+                              node->realsize,(opus_int16 *)buf,FRAMESIZE,0);
+            //writer->writei(buf,FRAMESIZE);
+
+            short *p1,*p2;
+
+            p1 = (short *)buf;
+            p2 = (short *)buf;
+
+            for(int i=0;i< FRAMESIZE;i++) {
+                *p1++ = *p2;
+                p2+=2;
+            }
+
+            nclient.senddata(buf,AFRAMEBUFSIZE/2);
+
+            //nclient.senddata(node->data,node->realsize);
+            tmp2->list->DestroyNode(node);
+
+            } else usleep(10000);
+        }
+        nclient.s_close();
+
+
+        fd = open(CANCALOFKEY,O_RDONLY);
+        read(fd,buf,44);
+        while ((ret=read(fd,buf,AFRAMEBUFSIZE)) > 0) {
+            writer->writei(buf,FRAMESIZE);
+            memset(buf,0,AFRAMEBUFSIZE);
+        }
+        close(fd);
+        writer->stop();
+
+
+
     }
  }
 
@@ -123,23 +202,18 @@ r_status DataInput (void *datain ,short *out,int size)
     listnode *node;
 
     while( (node=mellist->GetNode()) == nullptr ) usleep(10000);
-    memcpy(out,node->data,size*2);
+    memcpy((char *)out,(char *)node->data,size*2);
     mellist->DestroyNode(node);
     return SUCCESS;
 
 }
 void melnumdisplay(void *data)
 {
-    unsigned  int count=1;
-    PocketSphinxKeyword kwd(MODULEDIR HMM,MODULEDIR LM ,MODULEDIR DICT);
-    kwd.registeInOut(DataInput,data,outputCB,nullptr);
-    kwd.detectKeyword();
+    threaddata *tmp= (threaddata *)data;
 
-    /*
-    KeyWordDetect kwd(PATH_KEYWORD_COE);
-    kwd.CallbackReg(inputCB,outputCB,data,nullptr);
-    kwd.DetectKeyword();
-    */
+    PocketSphinxKeyword kwd(MODULEDIR HMM,MODULEDIR LM ,MODULEDIR DICT);
+    kwd.registeInOut(DataInput,tmp->list,outputCB,data);
+    kwd.detectKeyword();
 
 }
 
@@ -164,24 +238,23 @@ int main (int argc, char *argv[])
 {
     AlsaHandle audioread,audiowrite;
     SpeexHandler speexobj(FRAMESIZE,SAMPLERATE);
-    threaddata data,data2;
+    threaddata data,data2,data3;
     string hw;
 
+#if 0
+    //netclient nclient("192.168.199.245",9009);
+    netclient nclient;
+    nclient.senddata("hallo world",12);
+    nclient.s_close();
+#endif
     hw="hw:1";
     audioread.setHW(hw);
     audioread.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_CAPTURE);
 
-
-#if 0
-    PocketSphinxKeyword kwd(MODULEDIR HMM,MODULEDIR LM ,MODULEDIR DICT);
-
-    kwd.registeInOut(readmic,(void *)&audioread,outputCB,nullptr);
-    kwd.detectKeyword();
-#endif
 #if 1
     hw="hw:0";
     audiowrite.setHW(hw);
-    audiowrite.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
+    //audiowrite.init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
     printf("audio init finish\n");
 
     Linklist list( AFRAMEBUFSIZE , 30 );
@@ -199,26 +272,24 @@ int main (int argc, char *argv[])
 
     printf("launch thread\n");
     thread.start(audiohandle);
-    thread2.start(thread2_body,(void *)&data2);
+    //thread2.start(thread2_body,(void *)&data2);
 
     listnode *node,*node2;
 
-    //thread3.start(button_check,NULL);
 
     int err;
     OpusEncoder *enc = opus_encoder_create(SAMPLERATE,CHANNLE,\
                                            OPUS_APPLICATION_AUDIO,&err);
-    //GpioControl GC;
-    //int ledflag=0;
 
-/*
-    Linklist mellist( DTCNUM * sizeof(float) , 30 );
-    MfccHandle  MfccCalc;
-    listnode *melnode;
-*/
-    Linklist list3( FRAMESIZE * 2 , 30 );
+    Linklist list3 ( FRAMESIZE * 2 , 30 );
     listnode *keynode;
-    thread3.start(melnumdisplay,(void *)&list3);
+    data3.list = &list3;
+    data3.data1 = (void *) &audiowrite;
+    data3.data2 = &data2;
+    data3.needCap = false;
+    data3.times = 0;
+    thread3.start(melnumdisplay,(void *)&data3);
+
 
     while(1) {
 
@@ -226,42 +297,50 @@ int main (int argc, char *argv[])
 
         //memcpy(buf,node->data,AFRAMEBUFSIZE);
 
-        //判断是否有语音数据
-        if( speexobj.audioprocess(node->data) ) {
+        //对数据进行降噪处理并判断是否有语音数据
+        data3.is_speech = speexobj.audioprocess(node->data);
 
+        if( (keynode=list3.CreateNode()) != nullptr ) {
+            short *p1,*p2;
+            p1=(short *)keynode->data;
+            p2=(short *)node->data;
+            for(int i = 0 ;i < FRAMESIZE ; i++) {
+                *p1++=*p2;
+                p2+=2;
+            }
+            list3.InsertNode(keynode);
+        }
+
+
+        if( data3.needCap  ) {
+           if( data3.is_speech ) {
+#if 1
             //有则将有语音数据的buf 通过opus 编码后 保存到另外一个list中
             if( (node2=data2.list->CreateNode()) != nullptr ) {
                 err = opus_encode(enc,(opus_int16 *)node->data,\
                                   FRAMESIZE,(unsigned char *)node2->data,\
                                   AFRAMEBUFSIZE);
 
-                node2->realsize =err;
+                node2->realsize = err;
                 data2.list->InsertNode(node2);
-
             }
-/*
-            if( (melnode=mellist.CreateNode()) != nullptr ) {
-                MfccCalc.mfcc_calc((opus_int16 *)node->data,\
-                                   FRAMESIZE * CHANNLE,CHANNLE,(float *)melnode->data);
-                mellist.InsertNode(melnode);
 
-            }
-*/
-
+            } else {
+               time_t t=time(0);
+               //LogOut("get time :%lu",t);
+               if( data3.times == 0 )
+                   data3.times=t;
+               else if( (t - data3.times ) > data3.Captime) {
+                   data3.needCap=false;
+                   data3.times = 0;
+               }
+#endif
+           }
 
 
         }
-
-        if( (keynode=list3.CreateNode()) != nullptr ) {
-            short *p1,*p2;
-            p1=(short *)keynode->data;
-            p2=(short *)node->data;
-            for(int i=0;i<FRAMESIZE;i++) {
-                *p1++=*p2;
-                p2+=2;
-            }
-             list3.InsertNode(keynode);
-        }
+        //time_t t=time(0);
+        //LogOut("get time :%lu",t);
 
         list.DestroyNode(node);
 
