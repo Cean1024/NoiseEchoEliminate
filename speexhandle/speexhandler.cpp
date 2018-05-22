@@ -12,7 +12,7 @@ SpeexHandler::SpeexHandler(int frames,int samplerate)
 
     value =98;
     speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_START,(void *)&value);
-    value =80;
+    value =98;
     speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_CONTINUE,(void *)&value);
 
     //open voice limit
