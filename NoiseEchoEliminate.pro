@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     mfcc/mfcchandle.cpp \
     gpiocontrol.cpp \
     keyword/keyworddetect.cpp \
-    keyword/pocketsphinxkeyword.cpp
+    keyword/pocketsphinxkeyword.cpp \
+    network/netclient.cpp
 
 HEADERS += \
     audio/alsahandle.h \
@@ -26,5 +27,6 @@ HEADERS += \
     mfcc/mfcchandle.h \
     gpiocontrol.h \
     keyword/keyworddetect.h \
-    keyword/pocketsphinxkeyword.h
+    keyword/pocketsphinxkeyword.h \
+    network/netclient.h
 
