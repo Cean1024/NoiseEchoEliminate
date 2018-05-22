@@ -8,6 +8,7 @@ typedef int r_status;
 #define CHANNLE 2
 #define BITS 16
 #define SAMPLERATE 16000
+//#define SAMPLERATE 48000
 #define FRAMESIZE (SAMPLERATE/100)
 #define AFRAMEBUFSIZE (FRAMESIZE * CHANNLE *BITS /8)
 
@@ -49,7 +50,10 @@ typedef r_status (*KeywordOutCb) (KeyWordOutData &event,void *data);
 #define DICT "xiaosang.dic"
 #define LM "xiaosang.lm"
 #define NUMKEIWORDS 4
+#define ECHOOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/echoOfKeyword.wav"
+#define CANCALOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/cancal.wav"
 
+#define CAPWAITTIME 1
 
 /*common config*/
 
