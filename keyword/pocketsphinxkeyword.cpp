@@ -32,10 +32,10 @@ PocketSphinxKeyword::PocketSphinxKeyword(string hmm, string lm, string dict)
     getpcm = nullptr;
     outputresoult = nullptr;
     data = new int16[FRAMESIZE];
-    //memcpy(keywords[0],"你好",7);
+    memcpy(keywords[0],"你好同学",7);
     memcpy(keywords[1],"你好小桑",13);
-    //memcpy(keywords[2],"小桑小桑",13);
-    //memcpy(keywords[3],"小桑",7);
+    memcpy(keywords[2],"小桑小桑",13);
+    memcpy(keywords[3],"小桑同学",13);
 
 
 
@@ -70,8 +70,9 @@ r_status PocketSphinxKeyword::audio_process()
     uint count=0;
     rv = ps_start_utt(ps);
     if(rv < 0) { LogOut("ps_start_utt error");}
-    char * bestwords= "你好小桑";
-
+    //char * bestwords= "你好小桑";
+    //char * bestwords = "海建同学";
+    //char * bestwords = "小桑同学";
     int index = 0;
     int size,position ;
     while(true) {
@@ -86,17 +87,29 @@ r_status PocketSphinxKeyword::audio_process()
             //LogOut("somebody speaking %u",count++);
             if(words != nullptr   ) {
                 size = strlen(words);
-                //printf("keyword :%s size:%d rv:%d\n",words,size,rv);
+                printf("keyword :%s size:%d rv:%d\n",words,size,rv);
                 if( (size - index) > 3 ) {
                     key_word = words;
-                    if( (position = key_word.find(bestwords,0,12) ) != string::npos) {
+                    for(int i=0;i<4;i++)
+                    if( (position = key_word.find(keywords[i],0,12) ) != string::npos) {
                         ps_end_utt(ps);
                         key_word=key_word.substr(position,12);
                         printf("keyword :%s \n",key_word.c_str());
                         return FOUND;
                     }
                 }
-                index = size;
+                if(size != index ) {
+                    index = size;
+                    count = 0;
+                }
+                else {
+                    count++;
+                    if(count >60) {
+                        ps_end_utt(ps);
+                        return NOTFOUND;
+                    }
+                }
+
             }
         }
     }

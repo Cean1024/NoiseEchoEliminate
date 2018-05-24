@@ -4,7 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += ./include ./webrtc /usr/local/include/sphinxbase /usr/local/include/pocketsphinx
-LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus -L$$PWD/libs -lwiringPi \
+LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus  -lwiringPi \
         -lpocketsphinx -lsphinxbase -lsphinxad
 
 SOURCES += main.cpp \

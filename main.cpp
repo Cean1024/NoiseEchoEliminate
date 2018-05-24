@@ -138,9 +138,10 @@ r_status inputCB(float *reil_meil,void *data,int size)
 
 
     if(event.event == HaveKeyWord) {
-
+        netclient nclient;
         LogOut("keyword [%s] occoured!!",event.key_word.c_str());
-        writer->init (SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
+
+        writer->init (SAMPLERATE,2,BITS,SND_PCM_STREAM_PLAYBACK);
         int fd=open(ECHOOFKEY,O_RDONLY);
 
         read(fd,buf,44);
@@ -153,7 +154,7 @@ r_status inputCB(float *reil_meil,void *data,int size)
         tmp->Captime=CAPWAITTIME;
         tmp->needCap=true;
 
-        netclient nclient;
+
 
         while ( (tmp->needCap == true) ) {
             if ((node = tmp2->list->GetNode()) != nullptr)  {
@@ -179,8 +180,6 @@ r_status inputCB(float *reil_meil,void *data,int size)
 
             } else usleep(10000);
         }
-        nclient.s_close();
-
 
         fd = open(CANCALOFKEY,O_RDONLY);
         read(fd,buf,44);
@@ -191,7 +190,7 @@ r_status inputCB(float *reil_meil,void *data,int size)
         close(fd);
         writer->stop();
 
-
+        nclient.s_close();
 
     }
  }
@@ -300,6 +299,7 @@ int main (int argc, char *argv[])
         //对数据进行降噪处理并判断是否有语音数据
         data3.is_speech = speexobj.audioprocess(node->data);
 
+        if(data3.is_speech ) {
         if( (keynode=list3.CreateNode()) != nullptr ) {
             short *p1,*p2;
             p1=(short *)keynode->data;
@@ -310,7 +310,7 @@ int main (int argc, char *argv[])
             }
             list3.InsertNode(keynode);
         }
-
+        }
 
         if( data3.needCap  ) {
            if( data3.is_speech ) {

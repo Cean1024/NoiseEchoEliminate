@@ -9,9 +9,9 @@
 #include <cstdio>
 #include <cstring>
 
-#define PortNumber 9009
+#define PortNumber 9999
 
-#define SERVERIP "192.168.199.245"
+#define SERVERIP "192.168.199.122"
 
 class netclient
 {

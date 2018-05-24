@@ -52,6 +52,7 @@ typedef r_status (*KeywordOutCb) (KeyWordOutData &event,void *data);
 #define NUMKEIWORDS 4
 #define ECHOOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/echoOfKeyword.wav"
 #define CANCALOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/cancal.wav"
+//#define ECHOOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/wozaine_ch2.wav"
 
 #define CAPWAITTIME 1
 
