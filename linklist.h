@@ -14,6 +14,7 @@ struct listnode {
     char *data;
     listnode * next;
     short realsize;
+    int speechflag;
 };
 enum flagstate{
     FLAGLOCKED=1,

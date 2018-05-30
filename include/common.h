@@ -2,6 +2,7 @@
 #define __COMMON_H
 #include <iostream>
 typedef int r_status;
+typedef int S_ret;
 
 
 /*audio configration*/
@@ -11,6 +12,10 @@ typedef int r_status;
 //#define SAMPLERATE 48000
 #define FRAMESIZE (SAMPLERATE/100)
 #define AFRAMEBUFSIZE (FRAMESIZE * CHANNLE *BITS /8)
+
+#define ALSA_READ_HW "hw:1"
+#define ALSA_PLAY_HW "hw:0"
+
 
 /*mfcc config*/
 #define FILTERNUM 40
@@ -54,7 +59,7 @@ typedef r_status (*KeywordOutCb) (KeyWordOutData &event,void *data);
 #define CANCALOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/cancal.wav"
 //#define ECHOOFKEY "/home/pi/speech/kean/NoiseEchoEliminate/infoaudio/wozaine_ch2.wav"
 
-#define CAPWAITTIME 1
+#define CAPWAITTIME 2
 
 /*common config*/
 
@@ -83,6 +88,6 @@ enum returnstatus {
 
 };
 
-#define LogOut(PRINTFORMET,args...) printf( "[%s] " PRINTFORMET "\n",__func__,##args)
+#define LOGOUT(PRINTFORMET,args...) printf( "[%s] " PRINTFORMET "\n",__func__,##args)
 
 #endif

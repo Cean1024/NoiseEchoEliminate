@@ -12,7 +12,7 @@ PocketSphinxKeyword::PocketSphinxKeyword(string hmm, string lm, string dict)
 
     iton << 2048;
     iton >> nfftn;
-    LogOut("samprate:%s  nfft: %s ",samprate.c_str(),nfftn.c_str());
+    LOGOUT("samprate:%s  nfft: %s ",samprate.c_str(),nfftn.c_str());
     config = cmd_ln_init( NULL, ps_args(), TRUE,\
                           "-nfft",nfftn.c_str(),\
                           "-hmm", hmm.c_str(),\
@@ -21,12 +21,12 @@ PocketSphinxKeyword::PocketSphinxKeyword(string hmm, string lm, string dict)
                           "-samprate",samprate.c_str(),\
                           NULL);
     if(config== nullptr) {
-        LogOut("cmd_ln_init failed");
+        LOGOUT("cmd_ln_init failed");
         return ;
     }
     ps = ps_init(config);
     if(ps == nullptr) {
-        LogOut("ps_init failed");
+        LOGOUT("ps_init failed");
         return ;
     }
     getpcm = nullptr;
@@ -63,13 +63,13 @@ r_status PocketSphinxKeyword::audio_process()
 {
 
     char const * words;
-    if(getpcm == nullptr ) { LogOut("input callback error!!"); return FAILED;}
+    if(getpcm == nullptr ) { LOGOUT("input callback error!!"); return FAILED;}
 
 
     int  rv ;
     uint count=0;
     rv = ps_start_utt(ps);
-    if(rv < 0) { LogOut("ps_start_utt error");}
+    if(rv < 0) { LOGOUT("ps_start_utt error");}
     //char * bestwords= "你好小桑";
     //char * bestwords = "海建同学";
     //char * bestwords = "小桑同学";
@@ -77,26 +77,29 @@ r_status PocketSphinxKeyword::audio_process()
     int size,position ;
     while(true) {
 
-        getpcm(datain,data,FRAMESIZE);
+        if(getpcm(datain,data,FRAMESIZE) != SUCCESS)LOGOUT("failed to get pcm ");
         ps_process_raw(ps, data, FRAMESIZE, FALSE, FALSE);
 
         rv = ps_get_in_speech(ps);
         if( rv == 1 ) {
-
             words = ps_get_hyp( ps , nullptr );
-            //LogOut("somebody speaking %u",count++);
+            //LOGOUT("somebody speaking %u",count++);
             if(words != nullptr   ) {
                 size = strlen(words);
                 printf("keyword :%s size:%d rv:%d\n",words,size,rv);
-                if( (size - index) > 3 ) {
+                if( (size ) > 11 ) {
                     key_word = words;
-                    for(int i=0;i<4;i++)
-                    if( (position = key_word.find(keywords[i],0,12) ) != string::npos) {
+                    //for(int i=0;i<4;i++) {
+                    /*xiaosangtongxue */
+                    if( (position = key_word.find(keywords[3],0,12) ) != string::npos) {
                         ps_end_utt(ps);
                         key_word=key_word.substr(position,12);
                         printf("keyword :%s \n",key_word.c_str());
                         return FOUND;
                     }
+                    //}
+                    //ps_end_utt(ps);
+                    //return NOTFOUND;
                 }
                 if(size != index ) {
                     index = size;

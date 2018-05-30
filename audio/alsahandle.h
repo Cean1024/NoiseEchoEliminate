@@ -50,7 +50,7 @@ public:
     r_status audioinit ();
     r_status writei(char *buf ,int frames);
     r_status readi(char *buf ,int frames);
-    r_status setHW(std::string &hw);
+    r_status setHW(std::__cxx11::string hw);
 
 private:
 

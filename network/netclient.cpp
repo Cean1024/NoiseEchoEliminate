@@ -21,6 +21,7 @@ int netclient::init_client(std::string serverip,int port)
 {
     //struct sockaddr_in serverid;
 
+    if(clientfd>0)close(clientfd);
     if  (( clientfd = socket ( AF_INET ,  SOCK_STREAM , 0 ) ) < 0 ) {
         perror("LISTEN");
         return FAILED;
@@ -33,7 +34,7 @@ int netclient::init_client(std::string serverip,int port)
     server_addr.sin_port = htons( port );
     if ( ( connect ( clientfd ,(struct sockaddr *)&server_addr ,
                      sizeof (struct sockaddr_in) ) ) < 0) {
-        LogOut("connect error");
+        LOGOUT("connect error");
         perror("connect ");
         close(clientfd);
         clientfd = -1;

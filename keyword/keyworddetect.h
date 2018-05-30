@@ -68,7 +68,7 @@ public:
         dctfile=filepath;
         r_status ret;
         ret = readmel_coe(dctfile);
-        if(ret == ERROR) LogOut("readmel_coe failed\n");
+        if(ret == ERROR) LOGOUT("readmel_coe failed\n");
 
         realMeil = createMatrix();
     }

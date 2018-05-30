@@ -17,16 +17,16 @@ r_status keyword::readmel_coe(string filepath)
         while ( tmp.find("#",0) == string::npos );
         tmp = tmp.substr(tmp.find(".",0)-3,3);
         memcpy(xy[num].keyword,tmp.c_str(),3);
-        LogOut("keyword name:%s\n",tmp.c_str());
+        LOGOUT("keyword name:%s\n",tmp.c_str());
         memset(buf,0,READLEN);
         fp.getline(buf,READLEN);
-        LogOut("xy:%s\n",buf);
+        LOGOUT("xy:%s\n",buf);
         tmp=buf;
         index_x=stoi(tmp.substr(tmp.find("x:",0)+2,3));
         index_y=stoi(tmp.substr(tmp.find("y:",0)+2,2));
-        LogOut("index_x:%d index_y:%d\n",index_x,index_y);
+        LOGOUT("index_x:%d index_y:%d\n",index_x,index_y);
         if(index_x >BUFFER_X || index_y > BUFFER_Y) {
-            LogOut("ERROR !!! x and y should less than %d and %d\n",BUFFER_X,BUFFER_Y);
+            LOGOUT("ERROR !!! x and y should less than %d and %d\n",BUFFER_X,BUFFER_Y);
             return ERROR;
         }
         xy[num].x=index_x;
@@ -42,13 +42,13 @@ r_status keyword::readmel_coe(string filepath)
             dctmel=strtok(buf," ");
 
             dct_meil[num][loop][begin] = stof(dctmel);
-            //LogOut("dcymel:%f\n",dct_meil[num][loop][begin]);
+            //LOGOUT("dcymel:%f\n",dct_meil[num][loop][begin]);
             begin++;
 
             while( begin < index_y) {
                 dctmel=strtok(NULL," ");
                 dct_meil[num][loop][begin] = stof(dctmel);
-                //LogOut("dcymel:%f\n",dct_meil[num][loop][begin]);
+                //LOGOUT("dcymel:%f\n",dct_meil[num][loop][begin]);
                 begin++;
             }
             loop++;
@@ -107,7 +107,7 @@ r_status KeyWordDetect::DetectKeyword()
 {
 
     if(InputFunc == nullptr || OutputFunc ==nullptr){
-        LogOut("输入输出接口设置错误!\n");
+        LOGOUT("输入输出接口设置错误!\n");
         return ERROR;
     }
     while(true) {
@@ -135,7 +135,7 @@ r_status KeyWordDetect::updateMatrix(int num)
     r_status ret = InputFunc(tmp,Indata,BUFFER_Y);
 
     if ( ret != SUCCESS ) {
-        LogOut("获取梅尔倒谱系数失败!\n");
+        LOGOUT("获取梅尔倒谱系数失败!\n");
 
     }
     return ret;
@@ -181,8 +181,8 @@ r_status KeyWordDetect::Process(int num)
                 } else
                     for(int i=12;i-11<average;i++) baoluo[i]='=';
 
-                //LogOut("average %d \n",average);
-                LogOut("%s %d\n",baoluo.c_str(),count++);
+                //LOGOUT("average %d \n",average);
+                LOGOUT("%s %d\n",baoluo.c_str(),count++);
             }
 #endif
 
@@ -194,7 +194,7 @@ r_status KeyWordDetect::Process(int num)
         prob_f=count  / xy[num].x;
         prob_i = prob_f;
         if (prob_i >60) {
-            LogOut("关键字:%s 概率:%2d%% 匹配数:%5d 帧数:%d 匹配次数:%d\n",\
+            LOGOUT("关键字:%s 概率:%2d%% 匹配数:%5d 帧数:%d 匹配次数:%d\n",\
                    xy[num].keyword,prob_i,count,xy[num].x,++xy[num].acount);
         }
     }

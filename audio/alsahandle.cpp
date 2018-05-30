@@ -34,7 +34,7 @@ void AlsaHandle::stop()
         pcm_param.playback_handle=NULL;
     }
 }
-r_status AlsaHandle::setHW(std::string &hw)
+r_status AlsaHandle::setHW(std::string hw)
 {
     this->hw=hw;
 
