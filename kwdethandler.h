@@ -9,6 +9,7 @@
 #include "keyword/pocketsphinxkeyword.h"
 #include "network/netclient.h"
 #include <unistd.h>
+#include <list>
 
 class KWDetHandler:public Poco::Runnable
 {
@@ -16,11 +17,10 @@ public:
     KWDetHandler();
     ~KWDetHandler();
 
-    void addlist(Linklist &list);
+    void addlist(list<listnode2> &dlist);
 
-    Linklist *getlist()
-    {
-        return list;
+    list<listnode2> *getdlist(){
+        return dlist;
     }
     AlsaHandle *getplayer() {
         return player;
@@ -34,8 +34,8 @@ protected:
 
 private:
     PocketSphinxKeyword  *PS_Kw;
-    Linklist *list;
     AlsaHandle *player;
+    list<listnode2> *dlist;
 
 
 

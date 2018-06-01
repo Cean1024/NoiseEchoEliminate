@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <Poco/MemoryPool.h>
 #include <mutex>
-
+#include "common.h"
 #define DBLOCKSIZE 1024
 
 using namespace std;
@@ -16,6 +16,12 @@ struct listnode {
     short realsize;
     int speechflag;
 };
+struct listnode2 {
+    char data[FRAMESIZE * CHANNLE];
+    int realsize;
+    int speechflag;
+};
+
 enum flagstate{
     FLAGLOCKED=1,
     FLAGRELEASE=0
@@ -30,7 +36,7 @@ public:
     }
 
     listnode * CreateNode() {
-        while(flag == FLAGLOCKED)usleep(100);
+        while(flag == FLAGLOCKED)usleep(10000);
         flag =FLAGLOCKED;
         listnode *node;
         try{
@@ -43,7 +49,7 @@ public:
         return node;
     }
     int InsertNode(listnode *node) {
-        while(flag == FLAGLOCKED)usleep(100);
+        while(flag == FLAGLOCKED)usleep(10000);
         flag =FLAGLOCKED;
         node->next=nullptr;
         if(head==nullptr && real==nullptr) {
@@ -60,7 +66,7 @@ public:
     }
     listnode * GetNode() {
         listnode *node;
-        while(flag == FLAGLOCKED)usleep(100);
+        while(flag == FLAGLOCKED)usleep(10000);
         flag =FLAGLOCKED;
         if(head==nullptr && real==nullptr) node = nullptr;
         else{
@@ -75,7 +81,7 @@ public:
 
     void DestroyNode(listnode *node)
     {
-        while(flag == FLAGLOCKED)usleep(100);
+        while(flag == FLAGLOCKED)usleep(10000);
         flag =FLAGLOCKED;
         pool->release(node->data);
         list->release(node);

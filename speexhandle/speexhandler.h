@@ -1,33 +1,33 @@
 #ifndef SPEEXHANDLER_H
 #define SPEEXHANDLER_H
 #include <iostream>
-#include <speex/speex_preprocess.h>
-#include <speex/speex_echo.h>
-#include "common.h"
 
+#include "common.h"
+#include "speexbase.h"
 #include <Poco/Thread.h>
 #include <Poco/Runnable.h>
 #include "linklist.h"
 #include "audio/alsahandle.h"
+#include <list>
 
-#define DENOISE_DB (20)
 
-class SpeexHandler:public Poco::Thread, public Poco::Runnable
+class SpeexHandler:public Poco::Thread, public Poco::Runnable,public SpeexBase
 {
 public:
     SpeexHandler(int frames, int samplerate);
-    virtual ~SpeexHandler();
+    ~SpeexHandler();
 
-    int audioprocess(char *buf);
-    void addlist(Linklist &list);
+    void addlist(list<listnode2> &dlist, list<listnode2> &echo );
+
 protected:
 
     void run();
 private:
-    SpeexPreprocessState  *preprocess_state;
-    SpeexEchoState *echo_state;
-    Linklist *datalist;
+
     AlsaHandle *reader;
+    AlsaHandle *player;
+    list<listnode2> *dlist;
+    list<listnode2> *echolist;
 };
 
 #endif // SPEEXHANDLER_H

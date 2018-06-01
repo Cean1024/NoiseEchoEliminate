@@ -1,11 +1,11 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console c++11 gdb
 CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += ./include ./webrtc /usr/local/include/sphinxbase /usr/local/include/pocketsphinx
 LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus  -lwiringPi \
-        -lpocketsphinx -lsphinxbase -lsphinxad
+        -lpocketsphinx -lsphinxbase -lsphinxad -lPocoNet
 
 SOURCES += main.cpp \
     audio/alsahandle.cpp \
@@ -17,7 +17,10 @@ SOURCES += main.cpp \
     keyword/keyworddetect.cpp \
     keyword/pocketsphinxkeyword.cpp \
     network/netclient.cpp \
-    kwdethandler.cpp
+    kwdethandler.cpp \
+    speexhandle/speexbase.cpp \
+    speexhandle/echocollection.cpp \
+    network/netbase.cpp
 
 HEADERS += \
     audio/alsahandle.h \
@@ -30,5 +33,8 @@ HEADERS += \
     keyword/keyworddetect.h \
     keyword/pocketsphinxkeyword.h \
     network/netclient.h \
-    kwdethandler.h
+    kwdethandler.h \
+    speexhandle/speexbase.h \
+    speexhandle/echocollection.h \
+    network/netbase.h
 

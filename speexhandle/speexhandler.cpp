@@ -1,78 +1,73 @@
 #include "speexhandler.h"
 
-SpeexHandler::SpeexHandler(int frames,int samplerate)
+SpeexHandler::SpeexHandler(int frames,int samplerate):SpeexBase(frames,samplerate)
 {
-    this->preprocess_state = speex_preprocess_state_init(frames * 2 ,samplerate);
-    this->echo_state = speex_echo_state_init(frames*2,AFRAMEBUFSIZE);
-
-    int value;
-
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_VAD,(void *)&value);
-
-    value =98;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_START,(void *)&value);
-    value =98;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_PROB_CONTINUE,(void *)&value);
-
-    //open voice limit
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_DENOISE,(void *)&value);
-    value= DENOISE_DB;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_NOISE_SUPPRESS,(void *)&value);
-
-    //open AGC
-    value=1;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_AGC,(void *)&value);
-    value=samplerate;
-    speex_preprocess_ctl(preprocess_state,SPEEX_PREPROCESS_SET_AGC_LEVEL,(void *)&value);
-
-    datalist = nullptr;
+    player =nullptr;
     reader = new AlsaHandle();
     reader->setHW(ALSA_READ_HW);
-    int ret = reader->init(SAMPLERATE,CHANNLE,BITS,SND_PCM_STREAM_CAPTURE);
+    int ret = reader->init(samplerate,CHANNLE,BITS,SND_PCM_STREAM_CAPTURE);
     if(ret != ISUCCESS)  LOGOUT("reader->init failed!!");
-
+    dlist = nullptr;
+/*
+    player = new AlsaHandle();
+    player->setHW(ALSA_PLAY_HW);
+    player->init(samplerate,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
+*/
 }
 SpeexHandler::~SpeexHandler()
 {
-    speex_preprocess_state_destroy(preprocess_state);
-    speex_echo_state_destroy(echo_state);
     if(reader )delete reader;
 }
 
-int SpeexHandler::audioprocess(char *buf)
+void SpeexHandler::addlist(list<listnode2> &dlist, list<listnode2> &echo )
 {
-    return speex_preprocess_run(preprocess_state,(spx_int16_t *)buf);
+    this->echolist =&echo;
+    this->dlist = &dlist;
 }
-void SpeexHandler::addlist(Linklist &list)
-{
-    this->datalist = &list;
-}
+#include <sys/time.h>
 void SpeexHandler::run()
 {
-    listnode *node;
-    int isSpeech;
     char buf[AFRAMEBUFSIZE];
+    char echobuf[AFRAMEBUFSIZE];
     short *p1,*p2;
-    if(datalist==nullptr) { LOGOUT("datalist is empty!!"); return;}
+    if( dlist == nullptr ) { LOGOUT("datalist is empty!!"); return;}
+    memset(echobuf,0,AFRAMEBUFSIZE);
+
+    listnode2 datanode;
+#ifdef CALCRUNNINGTIME
+    struct timeval tpstart,tpend;
+    float timeuse;
+#endif
+
     while(true) {
+
+#ifdef CALCRUNNINGTIME
+        gettimeofday(&tpstart,NULL);
+#endif
+
         reader->readi(buf,FRAMESIZE);
-        while ( (node=datalist->CreateNode()) == nullptr ) usleep(10000);
-        speex_echo_capture(echo_state,(spx_int16_t *)buf,(spx_int16_t *)node->data);
-        memcpy(node->data, buf,AFRAMEBUFSIZE);
-        isSpeech = speex_preprocess_run(preprocess_state,(spx_int16_t *)node->data);
-        node->speechflag = isSpeech;
+        //echo_play(echobuf);
+        datanode.speechflag = 0;
+        datanode.speechflag = audioProcess(buf);
+
+        //if(player) player->writei(node->data,FRAMESIZE);
 
         /*change channle 2 -> 1*/
-        p1=(short *)node->data;
-        p2=(short *)node->data;
+        p1=(short *)datanode.data;
+        p2=(short *)buf;
         for(int i = 0 ;i < FRAMESIZE ; i++) {
             *p1++=*p2;
             p2+=2;
         }
-        node->realsize = AFRAMEBUFSIZE/2;
 
-        datalist->InsertNode(node);
+        datanode.realsize = FRAMESIZE * CHANNLE;
+        dlist->push_back(datanode);
+#ifdef CALCRUNNINGTIME
+        gettimeofday(&tpend,NULL);
+        timeuse=1000000*(tpend.tv_sec-tpstart.tv_sec)+
+        tpend.tv_usec-tpstart.tv_usec;
+        timeuse/=1000000;
+        printf("Used Time:%f\n",timeuse);
+#endif
     }
 }
