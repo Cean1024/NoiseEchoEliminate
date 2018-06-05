@@ -21,6 +21,10 @@ struct listnode2 {
     int realsize;
     int speechflag;
 };
+struct listnode4 {
+    char data[FRAMESIZE * 4];
+    int realsize;
+};
 
 enum flagstate{
     FLAGLOCKED=1,

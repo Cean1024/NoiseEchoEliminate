@@ -3,23 +3,25 @@
 SpeexHandler::SpeexHandler(int frames,int samplerate):SpeexBase(frames,samplerate)
 {
     player =nullptr;
+#ifdef RECENABLE
     reader = new AlsaHandle();
     reader->setHW(ALSA_READ_HW);
     int ret = reader->init(samplerate,CHANNLE,BITS,SND_PCM_STREAM_CAPTURE);
     if(ret != ISUCCESS)  LOGOUT("reader->init failed!!");
+#endif
     dlist = nullptr;
-/*
+#ifdef PLAYECHO
     player = new AlsaHandle();
-    player->setHW(ALSA_PLAY_HW);
-    player->init(samplerate,CHANNLE,BITS,SND_PCM_STREAM_PLAYBACK);
-*/
+    player->setHW("hw:1");
+    player->init(samplerate,2,BITS,SND_PCM_STREAM_PLAYBACK);
+#endif
 }
 SpeexHandler::~SpeexHandler()
 {
     if(reader )delete reader;
 }
 
-void SpeexHandler::addlist(list<listnode2> &dlist, list<listnode2> &echo )
+void SpeexHandler::addlist(list<listnode2> &dlist, list<listnode4> &echo )
 {
     this->echolist =&echo;
     this->dlist = &dlist;
@@ -39,19 +41,40 @@ void SpeexHandler::run()
     float timeuse;
 #endif
 
+#ifdef ECHOCOLLECTIONENABLE
+    listnode4 echonode;
+    list<listnode4>::iterator it;
+#endif
+    int count=0;
     while(true) {
 
 #ifdef CALCRUNNINGTIME
         gettimeofday(&tpstart,NULL);
 #endif
 
+#ifdef RECENABLE
         reader->readi(buf,FRAMESIZE);
-        //echo_play(echobuf);
-        datanode.speechflag = 0;
+#endif
+
+#ifdef ECHOCOLLECTIONENABLE
+        if(count > 9) {
+        if(!echolist->empty()) {
+            //LOGOUT("handle echo");
+            it = echolist->begin();
+            echonode =*it;
+
+            //if(player) player->writei(echonode.data,FRAMESIZE);
+            echo_play(echonode.data);
+            echolist->erase(it);
+        }
+
+    } else count++;
+#endif
+#ifdef RECENABLE
         datanode.speechflag = audioProcess(buf);
-
-        //if(player) player->writei(node->data,FRAMESIZE);
-
+#ifdef PLAYECHO
+        if(player) player->writei(buf,FRAMESIZE);
+#endif
         /*change channle 2 -> 1*/
         p1=(short *)datanode.data;
         p2=(short *)buf;
@@ -62,6 +85,8 @@ void SpeexHandler::run()
 
         datanode.realsize = FRAMESIZE * CHANNLE;
         dlist->push_back(datanode);
+#endif
+
 #ifdef CALCRUNNINGTIME
         gettimeofday(&tpend,NULL);
         timeuse=1000000*(tpend.tv_sec-tpstart.tv_sec)+
@@ -69,5 +94,6 @@ void SpeexHandler::run()
         timeuse/=1000000;
         printf("Used Time:%f\n",timeuse);
 #endif
+
     }
 }

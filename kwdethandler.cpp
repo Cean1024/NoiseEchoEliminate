@@ -28,14 +28,16 @@ r_status KWDetHandler::DataInput (void *datain ,short *out,int size)
     list<listnode2> *dlist = kwd_hd->getdlist();
     //list<listnode2> *dlist = (list<listnode2> *)datain;
 
-    listnode *node;
     listnode2 dnode;
 
     if(dlist == nullptr) return FAILED;
 
     list<listnode2>::iterator it;
 
-    while( dlist->empty() ) usleep(10000);
+    while( dlist->empty() ) {
+        //LOGOUT("waiting");
+        usleep(100000);
+    }
 
     it = dlist->begin();
     dnode = *it;
@@ -111,6 +113,7 @@ r_status KWDetHandler::outputCB (KeyWordOutData &event,void *data)
         player->stop();
 
         nclient.s_close();
+        LOGOUT("KWDetHandler finish keyword handle");
     }
 }
 void KWDetHandler::run()

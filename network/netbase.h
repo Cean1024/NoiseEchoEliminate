@@ -10,11 +10,11 @@
 #include "Poco/Timestamp.h"
 #include "Poco/DateTimeFormatter.h"
 
-class NetBase
+class NetUdpBase
 {
 public:
-    NetBase();
-    virtual ~NetBase();
+    NetUdpBase();
+    virtual ~NetUdpBase();
     S_ret open(std::string serverip,int port);
     S_ret close();
     S_ret listen();
@@ -24,7 +24,7 @@ public:
 private:
     Poco::Net::SocketAddress *sa;
     Poco::Net::DatagramSocket *udpbody;
-
+    Poco::Net::SocketAddress sender;
 };
 
 #endif // NETBASE_H

@@ -17,7 +17,7 @@ public:
     SpeexHandler(int frames, int samplerate);
     ~SpeexHandler();
 
-    void addlist(list<listnode2> &dlist, list<listnode2> &echo );
+    void addlist(list<listnode2> &dlist, list<listnode4> &echo );
 
 protected:
 
@@ -27,7 +27,7 @@ private:
     AlsaHandle *reader;
     AlsaHandle *player;
     list<listnode2> *dlist;
-    list<listnode2> *echolist;
+    list<listnode4> *echolist;
 };
 
 #endif // SPEEXHANDLER_H

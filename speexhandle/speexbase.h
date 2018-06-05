@@ -20,8 +20,9 @@ public:
 private:
     SpeexPreprocessState  *preprocess_state;
     SpeexEchoState *echo_state;
-    SpeexResamplerState  *res;
+
     spx_int16_t *echo;
+    spx_int16_t *noecho;
     int isSpeesh;
 
 };

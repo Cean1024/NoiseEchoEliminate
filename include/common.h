@@ -1,9 +1,16 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 #include <iostream>
+#include <unistd.h>
 typedef int r_status;
 typedef int S_ret;
 
+#define SoftwareName "voiceWakeUp"
+
+
+/*net config*/
+#define ECHO_RES_IP "127.0.0.1"
+#define ECHO_RES_PORT 9998
 
 /*audio configration*/
 #define CHANNLE 2
@@ -12,7 +19,7 @@ typedef int S_ret;
 #define FRAMESIZE (SAMPLERATE/100)
 #define AFRAMEBUFSIZE (FRAMESIZE * CHANNLE *BITS /8)
 
-#define ECHOSAMPLERATE 48000
+#define ECHOSAMPLERATE 44100
 #define ECHOFRAMESIZE (ECHOSAMPLERATE/100)
 
 #define ALSA_READ_HW "hw:1"
@@ -90,6 +97,16 @@ enum returnstatus {
 
 };
 
-#define LOGOUT(PRINTFORMET,args...) printf( "[%s] " PRINTFORMET "\n",__func__,##args)
+#define LOGOUT(format,...)  { \
+    time_t tt=time(0); struct tm   time;\
+    localtime_r(&tt,&time);\
+    printf("%02d-%02d-%02d %02d:%02d:%02d" \
+            " %s [%s]=> "\
+            format "\n",time.tm_year + 1900,\
+    time.tm_mon + 1,time.tm_mday,time.tm_hour,\
+    time.tm_min,time.tm_sec,SoftwareName,\
+    __func__,##__VA_ARGS__);\
+  }
+//printf( "[%s] " PRINTFORMET "\n",__func__,##args)
 
 #endif

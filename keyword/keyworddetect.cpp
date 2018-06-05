@@ -159,7 +159,7 @@ r_status KeyWordDetect::Process(int num)
     float prob_f=0;
     int average,prob_i;
     int count=0;
-    for(int time=0;time<xy[num].x;time++){
+    for(int times=0;times<xy[num].x;times++){
         count=0;
         similarity=0;
         prob_f=0;
