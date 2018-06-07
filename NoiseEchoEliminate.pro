@@ -9,7 +9,7 @@ LIBS += -lasound  -lspeexdsp -lPocoFoundation -lpthread -lopus  -lwiringPi \
         -lpocketsphinx -lsphinxbase -lsphinxad -lPocoNet
 DEFINES += ECHOCOLLECTIONENABLE
 DEFINES += RECENABLE
-#DEFINES += PLAYECHO
+DEFINES += PLAYECHO
 
 SOURCES += main.cpp \
     audio/alsahandle.cpp \

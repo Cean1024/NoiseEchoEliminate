@@ -24,6 +24,8 @@ struct listnode2 {
 struct listnode4 {
     char data[FRAMESIZE * 4];
     int realsize;
+    bool resetflag;
+    int ori_rate;
 };
 
 enum flagstate{

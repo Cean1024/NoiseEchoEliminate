@@ -10,6 +10,13 @@
 #include "Poco/Timestamp.h"
 #include "Poco/DateTimeFormatter.h"
 
+struct udppackage {
+    int samplerate;
+    int ch;
+    int size;
+    char buf[5760];
+};
+
 class NetUdpBase
 {
 public:

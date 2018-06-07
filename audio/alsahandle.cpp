@@ -231,7 +231,7 @@ r_status AlsaHandle::writei(char *buf ,int frames)
     err = snd_pcm_writei ( pcm_param.playback_handle , buf, frames);
     if ( err == -EPIPE) {
 
-        fprintf(stderr, "underrun accourred, frames:%d\n",frames);
+        //fprintf(stderr, "underrun accourred, frames:%d\n",frames);
         snd_pcm_prepare( pcm_param.playback_handle );
 
     } else if ( err < 0 ) {

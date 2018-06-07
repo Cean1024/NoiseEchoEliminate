@@ -16,6 +16,7 @@ public:
     virtual ~SpeexBase();
     S_ret echo_play(char *buf);
     S_ret audioProcess(char *data);
+    void echo_reset();
 
 private:
     SpeexPreprocessState  *preprocess_state;

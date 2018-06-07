@@ -42,19 +42,21 @@ S_ret SpeexBase::echo_play(char *buf)
     if(echo_state == nullptr)return FAILED;
 
     memcpy(echo,buf,AFRAMEBUFSIZE);
-    //speex_echo_playback(echo_state,(spx_int16_t *)buf);
+
     return SUCCESS;
 }
-
+void SpeexBase::echo_reset()
+{
+    speex_echo_state_reset(echo_state);
+}
 S_ret SpeexBase::audioProcess(char *data)
 {
     if(echo_state == nullptr || preprocess_state == nullptr)return FAILED;
 #ifdef ECHOCOLLECTIONENABLE
     speex_echo_cancellation(echo_state,(spx_int16_t *)data,echo,noecho);
+#endif;
+    isSpeesh = speex_preprocess_run(preprocess_state,noecho);
     memcpy(data,noecho,AFRAMEBUFSIZE);
-#endif
-    isSpeesh = speex_preprocess_run(preprocess_state,(spx_int16_t *)data);
-    //memcpy(out,data,AFRAMEBUFSIZE);
-    //out=(char *)echo;
+
     return isSpeesh;
 }

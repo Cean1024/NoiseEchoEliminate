@@ -12,7 +12,7 @@ SpeexHandler::SpeexHandler(int frames,int samplerate):SpeexBase(frames,samplerat
     dlist = nullptr;
 #ifdef PLAYECHO
     player = new AlsaHandle();
-    player->setHW("hw:1");
+    player->setHW("plughw:1");
     player->init(samplerate,2,BITS,SND_PCM_STREAM_PLAYBACK);
 #endif
 }
@@ -46,6 +46,8 @@ void SpeexHandler::run()
     list<listnode4>::iterator it;
 #endif
     int count=0;
+    int delaycounts=3;
+    int beforcount=0;
     while(true) {
 
 #ifdef CALCRUNNINGTIME
@@ -55,25 +57,48 @@ void SpeexHandler::run()
 #ifdef RECENABLE
         reader->readi(buf,FRAMESIZE);
 #endif
+        if(beforcount > 0) {
+            beforcount--;
+            continue;
+        }
 
+        //if(player) player->writei( buf , FRAMESIZE);
 #ifdef ECHOCOLLECTIONENABLE
-        if(count > 9) {
+        do {
         if(!echolist->empty()) {
             //LOGOUT("handle echo");
             it = echolist->begin();
             echonode =*it;
 
-            //if(player) player->writei(echonode.data,FRAMESIZE);
+            if(echonode.resetflag) {
+                LOGOUT("reset echo config");
+                count=0;
+                 //beforcount=13;
+
+                if(echonode.ori_rate == 24000) {
+                    delaycounts = 0;
+                    beforcount=0;
+                    //continue;
+                }
+                else {
+                    //echo_reset();
+                    beforcount=5;
+                    //delaycounts =3;
+                }
+            }
+            //if(player) player->writei( echonode.data , FRAMESIZE);
+            if(beforcount<0)beforcount++;
             echo_play(echonode.data);
             echolist->erase(it);
         }
+        }while(beforcount < 0);
 
-    } else count++;
+   // } else count++;
 #endif
 #ifdef RECENABLE
         datanode.speechflag = audioProcess(buf);
 #ifdef PLAYECHO
-        if(player) player->writei(buf,FRAMESIZE);
+       // if(player) player->writei(buf,FRAMESIZE);
 #endif
         /*change channle 2 -> 1*/
         p1=(short *)datanode.data;
